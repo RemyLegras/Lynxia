@@ -1,18 +1,49 @@
 version: '3.8'
 
 services:
-  api:
-    build: .
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: documents_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./back
     ports:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
       - ENV=development
-      - MYSQL_HOST=
+      - MYSQL_HOST=db
       - MYSQL_USER=root
-      - MYSQL_PASSWORD=
-      - MYSQL_DATABASE=
+      - MYSQL_PASSWORD=rootpassword
+      - MYSQL_DATABASE=documents_db
     restart: unless-stopped
     volumes:
-      - ./app:/app/app
+      - ./back:/app/app
       - ./uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+volumes:
+  db_data:

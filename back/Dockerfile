@@ -5,7 +5,7 @@ COPY requirements.txt .
 # Installer les dépendances
 RUN pip install --no-cache-dir -r requirements.txt
 # Copier le code de l'application
-COPY . .
+COPY . app/
 # Créer les dossiers nécessaires
 RUN mkdir -p uploads/raw data
 # Exposer le port
