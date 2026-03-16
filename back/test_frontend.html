@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Backend Auth</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .section { margin: 30px 0; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        input, button { width: 100%; padding: 10px; margin: 5px 0; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .error { color: red; }
+        .success { color: green; }
+        .hidden { display: none; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Test Backend Auth API</h1>
+    
+    <!-- Section Inscription -->
+    <div class="section">
+        <h2>Inscription</h2>
+        <form id="registerForm">
+            <input type="email" id="registerEmail" placeholder="Email" required>
+            <input type="password" id="registerPassword" placeholder="Mot de passe" required>
+            <button type="submit">S'inscrire</button>
+        </form>
+        <div id="registerResult"></div>
+    </div>
+
+    <!-- Section Connexion -->
+    <div class="section">
+        <h2>Connexion</h2>
+        <form id="loginForm">
+            <input type="email" id="loginEmail" placeholder="Email" required>
+            <input type="password" id="loginPassword" placeholder="Mot de passe" required>
+            <button type="submit">Se connecter</button>
+        </form>
+        <div id="loginResult"></div>
+    </div>
+
+    <!-- Section Profil (uniquement si connecté) -->
+    <div class="section hidden" id="profileSection">
+        <h2>Profil Utilisateur</h2>
+        <button id="getProfileBtn">Voir mon profil</button>
+        <button id="logoutBtn">Se déconnecter</button>
+        <div id="profileResult"></div>
+    </div>
+
+    <!-- Section Test Users -->
+    <div class="section">
+        <h2>Utilisateurs de test</h2>
+        <button id="fillTestUser1">Remplir: alice@example.com / password123</button>
+        <button id="fillTestUser2">Remplir: bob@example.com / password456</button>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+        let currentToken = localStorage.getItem('token');
+
+        // Test users dictionary
+        const testUsers = {
+            alice: { email: 'alice@example.com', password: 'password123' },
+            bob: { email: 'bob@example.com', password: 'password456' }
+        };
+
+        // Afficher la section profil si déjà connecté
+        if (currentToken) {
+            document.getElementById('profileSection').classList.remove('hidden');
+        }
+
+        // Inscription
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                const resultDiv = document.getElementById('registerResult');
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success">${data.message}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">Erreur: ${data.detail}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('registerResult').innerHTML = `<div class="error">Erreur réseau: ${error.message}</div>`;
+            }
+        });
+
+        // Connexion
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                const resultDiv = document.getElementById('loginResult');
+                
+                if (response.ok) {
+                    currentToken = data.access_token;
+                    localStorage.setItem('token', currentToken);
+                    resultDiv.innerHTML = `<div class="success">Connecté! Token: ${data.access_token.substring(0, 20)}...</div>`;
+                    document.getElementById('profileSection').classList.remove('hidden');
+                } else {
+                    resultDiv.innerHTML = `<div class="error">Erreur: ${data.detail}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('loginResult').innerHTML = `<div class="error">Erreur réseau: ${error.message}</div>`;
+            }
+        });
+
+        // Voir profil
+        document.getElementById('getProfileBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch(`${API_BASE}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                
+                const data = await response.json();
+                const resultDiv = document.getElementById('profileResult');
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `<div class="success"><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">Erreur: ${data.detail}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('profileResult').innerHTML = `<div class="error">Erreur réseau: ${error.message}</div>`;
+            }
+        });
+
+        // Déconnexion
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            currentToken = null;
+            document.getElementById('profileSection').classList.add('hidden');
+            document.getElementById('loginResult').innerHTML = '<div class="success">Déconnecté</div>';
+            document.getElementById('profileResult').innerHTML = '';
+        });
+
+        // Remplir avec utilisateurs de test
+        document.getElementById('fillTestUser1').addEventListener('click', () => {
+            document.getElementById('registerEmail').value = testUsers.alice.email;
+            document.getElementById('registerPassword').value = testUsers.alice.password;
+            document.getElementById('loginEmail').value = testUsers.alice.email;
+            document.getElementById('loginPassword').value = testUsers.alice.password;
+        });
+
+        document.getElementById('fillTestUser2').addEventListener('click', () => {
+            document.getElementById('registerEmail').value = testUsers.bob.email;
+            document.getElementById('registerPassword').value = testUsers.bob.password;
+            document.getElementById('loginEmail').value = testUsers.bob.email;
+            document.getElementById('loginPassword').value = testUsers.bob.password;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+services:
+  api:
+    build: ./back
+    ports:
+      - "8000:8000"
+    volumes:
+      # Uniquement pour le développement (JSON)
+      - data:/app/data
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ENV=development
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=root
+      - MYSQL_DATABASE=documents_db
+    depends_on:
+      - mysql
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=documents_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+volumes:
+  data:
+  mysql_data:
