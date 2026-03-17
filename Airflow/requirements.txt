@@ -1,0 +1,4 @@
+faker
+reportlab
+Pillow
+pymupdf

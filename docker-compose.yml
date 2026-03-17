@@ -52,6 +52,22 @@ services:
       - mysql
     restart: unless-stopped
 
+  airflow:
+    build: ./Airflow
+    container_name: lynxia-airflow
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./Airflow/dags:/opt/airflow/dags
+      - ./Airflow/scripts:/opt/airflow/scripts
+      - ./Airflow/output_pdf:/opt/airflow/output_pdf
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+    command: standalone
+    restart: unless-stopped
+
 volumes:
   data:
   mysql_data:
