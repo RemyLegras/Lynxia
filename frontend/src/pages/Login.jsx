@@ -65,7 +65,7 @@ export default function Login() {
           <div className="relative z-10">
             <div className="flex items-center gap-3 text-white">
               <div className="w-10 h-10 bg-white rounded-lg overflow-hidden flex items-center justify-center">
-                <img src="/src/assets/logo.png" alt="LynxIA Logo" className="w-full h-full object-contain" />
+                <img src={logo} alt="LynxIA Logo" className="w-full h-full object-contain" />
               </div>
               <span className="text-2xl font-bold tracking-tight">LynxIA</span>
             </div>
@@ -73,14 +73,14 @@ export default function Login() {
           
           <div className="relative z-10">
             <h1 className="text-4xl font-extrabold text-white leading-tight mb-6">
-              Smarter <br /><span className="text-blue-200">intelligence.</span>
+              Intelligence <br /><span className="text-blue-200">supérieure.</span>
             </h1>
             <p className="text-blue-100 text-lg max-w-md leading-relaxed opacity-90">
-              Advanced AI for enterprise-grade document analysis and security.
+              IA avancée pour l'analyse et la sécurité des documents d'entreprise.
             </p>
             
             <div className="mt-12 bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-xl max-w-sm">
-              <p className="text-white italic text-sm mb-4">"LynxIA reduced our manual processing time by over 80%."</p>
+              <p className="text-white italic text-sm mb-4">"LynxIA a réduit notre temps de traitement manuel de plus de 80%."</p>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-blue-400"></div>
                 <div>
@@ -94,8 +94,8 @@ export default function Login() {
           <div className="relative z-10 text-blue-200 text-[11px] flex justify-between opacity-70">
             <span>© 2024 LynxIA Inc.</span>
             <div className="flex gap-4">
-              <a className="hover:text-white" href="#">Privacy</a>
-              <a className="hover:text-white" href="#">Terms</a>
+              <a className="hover:text-white" href="#">Confidentialité</a>
+              <a className="hover:text-white" href="#">Conditions</a>
             </div>
           </div>
         </div>
@@ -106,14 +106,14 @@ export default function Login() {
             {/* Mobile Header */}
             <div className="flex lg:hidden items-center gap-3 mb-8">
               <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <img src="/src/assets/logo.png" alt="LynxIA Logo" className="w-full h-full object-contain" />
+                <img src={logo} alt="LynxIA Logo" className="w-full h-full object-contain" />
               </div>
               <h2 className="text-slate-900 dark:text-white text-xl font-bold">LynxIA</h2>
             </div>
             
             <div className="text-center lg:text-left mb-6">
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-                {isSignUp ? "Create an account" : "Welcome back"}
+                {isSignUp ? "Créer un compte" : "Bon retour parmi nous"}
               </h2>
             </div>
 
@@ -134,7 +134,7 @@ export default function Login() {
                 <div className="relative">
                   <input 
                     type={showPassword ? "text" : "password"}
-                    placeholder="Password" 
+                    placeholder="Mot de passe" 
                     required 
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm border-transparent"
                     value={password}
@@ -161,9 +161,9 @@ export default function Login() {
                     checked={remember}
                     onChange={(e) => setRemember(e.target.checked)}
                   />
-                  <label htmlFor="remember" className="text-xs text-slate-500 dark:text-slate-400 cursor-pointer">Remember me</label>
+                  <label htmlFor="remember" className="text-xs text-slate-500 dark:text-slate-400 cursor-pointer">Se souvenir de moi</label>
                 </div>
-                <a href="#" className="text-xs font-semibold text-primary hover:underline">Forgot password?</a>
+                <a href="#" className="text-xs font-semibold text-primary hover:underline">Mot de passe oublié ?</a>
               </div>
               
               {error && <p className="text-red-500 text-sm font-bold mt-2">{error}</p>}
@@ -173,11 +173,11 @@ export default function Login() {
                 disabled={loading}
                 className="w-full bg-primary hover:bg-primary/95 text-white font-semibold py-3.5 rounded-lg shadow-lg shadow-primary/10 transition-all transform active:scale-[0.99] mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {loading ? "Chargement..." : (isSignUp ? "Sign up" : "Sign in")}
+                {loading ? "Chargement..." : (isSignUp ? "S'inscrire" : "Se connecter")}
               </button>
             </form>
             <p className="mt-8 text-center text-slate-500 dark:text-slate-400 text-sm">
-              {isSignUp ? "Already have an account?" : "New to LynxIA?"}{" "}
+              {isSignUp ? "Déjà un compte ?" : "Nouveau sur LynxIA ?"}{" "}
               <span 
                 onClick={() => {
                   setIsSignUp(!isSignUp);
@@ -185,13 +185,13 @@ export default function Login() {
                 }} 
                 className="text-primary font-bold hover:underline cursor-pointer"
               >
-                {isSignUp ? "Sign in" : "Sign up"}
+                {isSignUp ? "Se connecter" : "S'inscrire"}
               </span>
             </p>
             
             <div className="mt-12 flex items-center justify-center gap-2 text-slate-300 dark:text-slate-600">
               <span className="material-symbols-outlined text-[14px]">lock</span>
-              <span className="text-[9px] uppercase tracking-[0.2em] font-bold">Secure SSL Connection</span>
+              <span className="text-[9px] uppercase tracking-[0.2em] font-bold">Connexion SSL sécurisée</span>
             </div>
           </div>
         </div>
