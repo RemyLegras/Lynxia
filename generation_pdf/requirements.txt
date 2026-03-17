@@ -1,5 +1,5 @@
- faker
- reportlab
- pillow
- pymupdf
- pandas
+faker
+reportlab
+pillow
+pymupdf
+pandas
