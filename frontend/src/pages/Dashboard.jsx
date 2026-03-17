@@ -1,152 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.png';
+import React from 'react';
+import Layout from '../components/Layout';
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const userEmail = localStorage.getItem("user") || "Utilisateur";
-  const [showNotif, setShowNotif] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
-  
-  const notifRef = useRef(null);
-  const settingsRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
-        setShowNotif(false);
-      }
-      if (settingsRef.current && !settingsRef.current.contains(e.target)) {
-        setShowSettings(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const toggleDarkMode = () => {
-    const newDark = !isDark;
-    setIsDark(newDark);
-    if (newDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/");
-  };
-
   return (
-    <div className="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 flex min-h-screen">
-      {/* Side Navigation */}
-      <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col fixed h-full z-20">
-        <div className="p-6 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center bg-white">
-            <img src={logo} alt="Logo" className="w-full h-full object-contain" />
-          </div>
-          <div className="flex flex-col">
-            <h1 className="text-slate-900 dark:text-white text-base font-bold leading-none">LynxIA</h1>
-          </div>
-        </div>
-
-        <nav className="flex-1 px-4 py-4 space-y-1">
-          <a className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#093fb4]/10 text-[#093fb4]" href="#">
-            <span className="material-symbols-outlined text-[20px] fill-1">dashboard</span>
-            <span className="text-sm font-semibold">Tableau de bord</span>
-          </a>
-          <button onClick={() => navigate('/upload')} className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-            <span className="material-symbols-outlined text-[20px]">description</span>
-            <span className="text-sm font-medium">Importer</span>
-          </button>
-        </nav>
-
-        <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-800 space-y-1 relative">
-          <div ref={settingsRef}>
-            <button 
-              onClick={() => setShowSettings(!showSettings)}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${showSettings ? 'bg-slate-100 dark:bg-slate-800 text-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-            >
-              <span className="material-symbols-outlined text-[20px]">settings</span>
-              <span className="text-sm font-medium">Paramètres</span>
-            </button>
-            
-            {showSettings && (
-              <div className="absolute bottom-full left-4 mb-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-2 z-50">
-                <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Préférences</p>
-                </div>
-                <div className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                  <div className="flex items-center gap-3">
-                    <span className="material-symbols-outlined text-sm text-slate-400 group-hover:text-primary transition-colors">
-                      {isDark ? 'dark_mode' : 'light_mode'}
-                    </span>
-                    <span className="text-xs font-medium">Mode sombre</span>
-                  </div>
-                  <button 
-                    onClick={toggleDarkMode}
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${isDark ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-700'}`}
-                  >
-                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${isDark ? 'translate-x-5' : 'translate-x-1'}`} />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[#ed3500] hover:bg-[#ed3500]/5 dark:hover:bg-[#ed3500]/10 transition-colors"
-          >
-            <span className="material-symbols-outlined text-[20px]">logout</span>
-            <span className="text-sm font-medium">Déconnexion</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 ml-64 min-h-screen">
-        {/* Header */}
-        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-8 sticky top-0 z-10">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Tableau de bord</h2>
-          </div>
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-4">
-              <div className="relative" ref={notifRef}>
-                <button onClick={() => setShowNotif(!showNotif)} className="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors relative">
-                  <span className="material-symbols-outlined">notifications</span>
-                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-[#ed3500] ring-2 ring-white dark:ring-slate-900"></span>
-                </button>
-                {showNotif && (
-                  <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden">
-                    <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-                      <h4 className="text-sm font-bold">Notifications</h4>
-                    </div>
-                    <div className="px-4 py-8 flex flex-col items-center justify-center text-slate-400">
-                      <span className="material-symbols-outlined text-3xl mb-2">notifications_off</span>
-                      <p className="text-sm">Pas de notification</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-bold leading-none">{userEmail}</p>
-                  <p className="text-xs text-slate-500 mt-1">Admin</p>
-                </div>
-                <img alt="Profil" className="h-9 w-9 rounded-full object-cover" src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userEmail)}&background=093fb4&color=fff`} />
-              </div>
-            </div>
-          </div>
-        </header>
-
+    <Layout title="Tableau de bord">
         {/* Dashboard Body */}
         <div className="p-8">
           <div className="mb-8">
@@ -297,7 +154,6 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </Layout>
   );
 }
