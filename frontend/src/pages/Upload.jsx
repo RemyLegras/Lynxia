@@ -6,17 +6,36 @@ export default function Upload() {
   const navigate = useNavigate();
   const userEmail = localStorage.getItem("user") || "Utilisateur";
   const [showNotif, setShowNotif] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [isDark, setIsDark] = useState(document.documentElement.classList.contains('dark'));
+
   const notifRef = useRef(null);
+  const settingsRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (notifRef.current && !notifRef.current.contains(e.target)) {
         setShowNotif(false);
       }
+      if (settingsRef.current && !settingsRef.current.contains(e.target)) {
+        setShowSettings(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const toggleDarkMode = () => {
+    const newDark = !isDark;
+    setIsDark(newDark);
+    if (newDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -48,11 +67,38 @@ export default function Upload() {
           </a>
         </nav>
 
-        <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-800 space-y-1">
-          <a className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
-            <span className="material-symbols-outlined text-[20px]">settings</span>
-            <span className="text-sm font-medium">Paramètres</span>
-          </a>
+        <div className="px-4 py-4 border-t border-slate-200 dark:border-slate-800 space-y-1 relative">
+          <div ref={settingsRef}>
+            <button 
+              onClick={() => setShowSettings(!showSettings)}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${showSettings ? 'bg-slate-100 dark:bg-slate-800 text-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+            >
+              <span className="material-symbols-outlined text-[20px]">settings</span>
+              <span className="text-sm font-medium">Paramètres</span>
+            </button>
+            
+            {showSettings && (
+              <div className="absolute bottom-full left-4 mb-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-2 z-50">
+                <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Préférences</p>
+                </div>
+                <div className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-sm text-slate-400 group-hover:text-primary transition-colors">
+                      {isDark ? 'dark_mode' : 'light_mode'}
+                    </span>
+                    <span className="text-xs font-medium">Mode sombre</span>
+                  </div>
+                  <button 
+                    onClick={toggleDarkMode}
+                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${isDark ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-700'}`}
+                  >
+                    <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${isDark ? 'translate-x-5' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[#ed3500] hover:bg-[#ed3500]/5 dark:hover:bg-[#ed3500]/10 transition-colors"
@@ -187,33 +233,54 @@ export default function Upload() {
                   </div>
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-400 uppercase">Nom complet</label>
-                        <div className="relative">
-                          <input className="w-full bg-slate-50 dark:bg-slate-800 border-primary/20 rounded-lg px-3 py-2 text-sm font-medium focus:ring-primary focus:border-primary border-transparent" type="text" defaultValue="ALEXANDER J. STERLING"/>
-                          <span className="material-symbols-outlined absolute right-2 top-2 text-primary text-lg">check_circle</span>
-                        </div>
-                      </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <label className="text-xs font-semibold text-slate-400 uppercase">Date de naissance</label>
-                          <input className="w-full bg-slate-50 dark:bg-slate-800 border-primary/20 rounded-lg px-3 py-2 text-sm font-medium border-transparent" type="text" defaultValue="12 MAI 1988"/>
+                          <label className="text-xs font-semibold text-slate-400 uppercase">Type de document</label>
+                          <input className="w-full bg-slate-50 dark:bg-slate-800 border-primary/20 rounded-lg px-3 py-2 text-sm font-medium border-transparent" type="text" defaultValue="attestation"/>
                         </div>
                         <div className="space-y-1">
-                          <label className="text-xs font-semibold text-slate-400 uppercase">Expire le</label>
-                          <input className="w-full bg-slate-50 dark:bg-slate-800 border-primary/20 rounded-lg px-3 py-2 text-sm font-medium border-transparent" type="text" defaultValue="24 AOÛT 2029"/>
+                          <label className="text-xs font-semibold text-slate-400 uppercase">Date de validation</label>
+                          <input className="w-full bg-slate-50 dark:bg-slate-800 border-primary/20 rounded-lg px-3 py-2 text-sm font-medium border-transparent" type="text" defaultValue="2026-01-10"/>
                         </div>
                       </div>
+                      
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-400 uppercase">Numéro d'identité</label>
+                        <label className="text-xs font-semibold text-slate-400 uppercase">Numéro SIRET</label>
                         <div className="relative">
-                          <input className="w-full bg-slate-50 dark:bg-slate-800 border-primary/20 rounded-lg px-3 py-2 text-sm font-medium border-transparent" type="text" defaultValue="G-2944-1002-9981"/>
+                          <input className="w-full bg-slate-50 dark:bg-slate-800 border-primary/20 rounded-lg px-3 py-2 text-sm font-medium focus:ring-primary focus:border-primary border-transparent" type="text" defaultValue="12345678900012"/>
                           <span className="material-symbols-outlined absolute right-2 top-2 text-primary text-lg">check_circle</span>
                         </div>
                       </div>
+
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-slate-400 uppercase">Adresse</label>
-                        <textarea className="w-full bg-slate-50 dark:bg-slate-800 border-primary/20 rounded-lg px-3 py-2 text-sm font-medium border-transparent" rows="2" defaultValue="422 Oakwood Drive, Redwood City, CA 94063"></textarea>
+                        <label className="text-xs font-semibold text-slate-400 uppercase">Numéro TVA</label>
+                        <input className="w-full bg-slate-50 dark:bg-slate-800 border-primary/20 rounded-lg px-3 py-2 text-sm font-medium border-transparent" type="text" defaultValue="FR12345678901"/>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="space-y-1">
+                          <label className="text-xs font-semibold text-slate-400 uppercase">Montant HT</label>
+                          <input className="w-full bg-slate-50 dark:bg-slate-800 border-primary/20 rounded-lg px-3 py-2 text-sm font-medium border-transparent" type="text" defaultValue="1000"/>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-semibold text-slate-400 uppercase">Montant TVA</label>
+                          <input className="w-full bg-slate-50 dark:bg-slate-800 border-primary/20 rounded-lg px-3 py-2 text-sm font-medium border-transparent" type="text" defaultValue=""/>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-semibold text-slate-400 uppercase">Montant TTC</label>
+                          <input className="w-full bg-slate-50 dark:bg-slate-800 border-primary/20 rounded-lg px-3 py-2 text-sm font-medium border-transparent" type="text" defaultValue="1200"/>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="text-xs font-semibold text-slate-400 uppercase">Devise</label>
+                          <input className="w-full bg-slate-50 dark:bg-slate-800 border-primary/20 rounded-lg px-3 py-2 text-sm font-medium border-transparent" type="text" defaultValue="EUR"/>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-xs font-semibold text-slate-400 uppercase">Description</label>
+                          <input className="w-full bg-slate-50 dark:bg-slate-800 border-primary/20 rounded-lg px-3 py-2 text-sm font-medium border-transparent" type="text" defaultValue="boulanger"/>
+                        </div>
                       </div>
                     </div>
                   </div>

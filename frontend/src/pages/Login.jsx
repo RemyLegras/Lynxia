@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi } from "../services/api";
 import logo from "../assets/logo.png";
@@ -9,13 +9,38 @@ export default function Login() {
   const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Charger l'email mémorisé au montage
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("remembered_email");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRemember(true);
+    }
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (isForgotPassword) {
+      if (!email) {
+        setError("Veuillez entrer votre email");
+        return;
+      }
+      setLoading(true);
+      // Simuler l'envoi d'email pour le reset (uniquement front)
+      setTimeout(() => {
+        setLoading(false);
+        setResetSent(true);
+      }, 1000);
+      return;
+    }
 
     if (!email || !password) {
       setError("Veuillez remplir tous les champs");
@@ -34,7 +59,14 @@ export default function Login() {
       const data = res.data;
 
       localStorage.setItem("token", data.access_token);
-      if (remember) localStorage.setItem("user", data.user.email);
+      localStorage.setItem("user", data.user.email); // Toujours stocké pour le dashboard actuel
+
+      // Gestion du "Se souvenir de moi"
+      if (remember) {
+        localStorage.setItem("remembered_email", email);
+      } else {
+        localStorage.removeItem("remembered_email");
+      }
 
       navigate("/dashboard");
     } catch (err) {
@@ -42,6 +74,21 @@ export default function Login() {
       setError(msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleView = (view) => {
+    setError("");
+    setResetSent(false);
+    if (view === "signup") {
+      setIsSignUp(true);
+      setIsForgotPassword(false);
+    } else if (view === "forgot") {
+      setIsSignUp(false);
+      setIsForgotPassword(true);
+    } else {
+      setIsSignUp(false);
+      setIsForgotPassword(false);
     }
   };
 
@@ -113,81 +160,127 @@ export default function Login() {
             
             <div className="text-center lg:text-left mb-6">
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-                {isSignUp ? "Créer un compte" : "Bon retour parmi nous"}
+                {isForgotPassword 
+                  ? "Réinitialiser le mot de passe" 
+                  : (isSignUp ? "Créer un compte" : "Bon retour parmi nous")}
               </h2>
+              {isForgotPassword && !resetSent && (
+                <p className="text-slate-500 dark:text-slate-400 text-sm">
+                  Entrez votre email pour recevoir un lien de réinitialisation.
+                </p>
+              )}
             </div>
 
-            {/* Form */}
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div>
-                <input 
-                  type="email" 
-                  placeholder="Email" 
-                  required 
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm border-transparent"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+            {resetSent ? (
+              <div className="text-center lg:text-left space-y-6">
+                <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30 rounded-xl flex items-start gap-3">
+                  <span className="material-symbols-outlined text-green-600 mt-0.5">check_circle</span>
+                  <div className="text-left">
+                    <p className="text-green-800 dark:text-green-400 font-bold text-sm">Email envoyé !</p>
+                    <p className="text-green-700 dark:text-green-500 text-xs mt-1">
+                      Un lien de réinitialisation a été envoyé à <strong>{email}</strong>. Vérifiez vos spams si besoin.
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => toggleView('login')}
+                  className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-semibold py-3.5 rounded-lg transition-all"
+                >
+                  Retour à la connexion
+                </button>
               </div>
-              
-              <div>
-                <div className="relative">
+            ) : (
+              <form className="space-y-4" onSubmit={handleSubmit}>
+                <div>
                   <input 
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Mot de passe" 
+                    type="email" 
+                    placeholder="Email" 
                     required 
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm border-transparent"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                   />
+                </div>
+                
+                {!isForgotPassword && (
+                  <div>
+                    <div className="relative">
+                      <input 
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Mot de passe" 
+                        required 
+                        className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm border-transparent"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">
+                          {showPassword ? "visibility_off" : "visibility"}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                {!isForgotPassword && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        id="remember" 
+                        className="w-3.5 h-3.5 rounded text-primary border-slate-300 dark:border-slate-700 dark:bg-slate-800 focus:ring-primary"
+                        checked={remember}
+                        onChange={(e) => setRemember(e.target.checked)}
+                      />
+                      <label htmlFor="remember" className="text-xs text-slate-500 dark:text-slate-400 cursor-pointer">Se souvenir de moi</label>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => toggleView('forgot')}
+                      className="text-xs font-semibold text-primary hover:underline"
+                    >
+                      Mot de passe oublié ?
+                    </button>
+                  </div>
+                )}
+                
+                {error && <p className="text-red-500 text-sm font-bold mt-2">{error}</p>}
+
+                <button 
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-primary hover:bg-primary/95 text-white font-semibold py-3.5 rounded-lg shadow-lg shadow-primary/10 transition-all transform active:scale-[0.99] mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Chargement..." : (isForgotPassword ? "Envoyer le lien" : (isSignUp ? "S'inscrire" : "Se connecter"))}
+                </button>
+                
+                {isForgotPassword && (
                   <button 
                     type="button" 
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    onClick={() => toggleView('login')}
+                    className="w-full text-slate-500 dark:text-slate-400 text-xs font-semibold hover:text-slate-700 dark:hover:text-slate-200 transition-colors mt-2"
                   >
-                    <span className="material-symbols-outlined text-[18px]">
-                      {showPassword ? "visibility_off" : "visibility"}
-                    </span>
+                    Retour à la connexion
                   </button>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="checkbox" 
-                    id="remember" 
-                    className="w-3.5 h-3.5 rounded text-primary border-slate-300 dark:border-slate-700 dark:bg-slate-800 focus:ring-primary"
-                    checked={remember}
-                    onChange={(e) => setRemember(e.target.checked)}
-                  />
-                  <label htmlFor="remember" className="text-xs text-slate-500 dark:text-slate-400 cursor-pointer">Se souvenir de moi</label>
-                </div>
-                <a href="#" className="text-xs font-semibold text-primary hover:underline">Mot de passe oublié ?</a>
-              </div>
-              
-              {error && <p className="text-red-500 text-sm font-bold mt-2">{error}</p>}
+                )}
+              </form>
+            )}
 
-              <button 
-                type="submit"
-                disabled={loading}
-                className="w-full bg-primary hover:bg-primary/95 text-white font-semibold py-3.5 rounded-lg shadow-lg shadow-primary/10 transition-all transform active:scale-[0.99] mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {loading ? "Chargement..." : (isSignUp ? "S'inscrire" : "Se connecter")}
-              </button>
-            </form>
-            <p className="mt-8 text-center text-slate-500 dark:text-slate-400 text-sm">
-              {isSignUp ? "Déjà un compte ?" : "Nouveau sur LynxIA ?"}{" "}
-              <span 
-                onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setError("");
-                }} 
-                className="text-primary font-bold hover:underline cursor-pointer"
-              >
-                {isSignUp ? "Se connecter" : "S'inscrire"}
-              </span>
-            </p>
+            {!isForgotPassword && (
+              <p className="mt-8 text-center text-slate-500 dark:text-slate-400 text-sm">
+                {isSignUp ? "Déjà un compte ?" : "Nouveau sur LynxIA ?"}{" "}
+                <span 
+                  onClick={() => toggleView(isSignUp ? 'login' : 'signup')} 
+                  className="text-primary font-bold hover:underline cursor-pointer"
+                >
+                  {isSignUp ? "Se connecter" : "S'inscrire"}
+                </span>
+              </p>
+            )}
             
             <div className="mt-12 flex items-center justify-center gap-2 text-slate-300 dark:text-slate-600">
               <span className="material-symbols-outlined text-[14px]">lock</span>
