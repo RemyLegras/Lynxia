@@ -53,4 +53,4 @@ def init_tables():
     finally:
         conn.close()
 
-# init_tables() # Commenté pour éviter l'erreur au démarrage sans MySQL
+init_tables() # Initialise les tables au démarrage

@@ -36,6 +36,8 @@ services:
       - ./frontend:/app
       - /app/node_modules
     restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://localhost:8000
 
   phpmyadmin:
     image: phpmyadmin:latest
