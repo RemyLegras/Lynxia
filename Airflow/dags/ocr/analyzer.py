@@ -7,7 +7,9 @@ from doctr.io import DocumentFile
 
 from processors.bilan import BilanProcessor
 from processors.facture import FactureProcessor
+from processors.devis import DevisProcessor
 from processors.attestation import AttestationProcessor
+
 
 DEVICE = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
 
@@ -17,6 +19,7 @@ class OCRAnalyzer:
         self.processors = [
             BilanProcessor(),
             FactureProcessor(),
+            DevisProcessor(),
             AttestationProcessor()
         ]
 
