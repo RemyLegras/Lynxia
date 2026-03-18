@@ -13,6 +13,7 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - API_TOKEN=${API_TOKEN}
     depends_on:
       - mysql
     restart: unless-stopped
