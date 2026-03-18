@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from app.schemas.document import Document, DocumentCuratedData
-from app.utils.auth import get_current_user
+from app.auth_utils import get_current_user
 from app.services.document_service import create_document, get_document, get_user_documents, update_document
 
 router = APIRouter()

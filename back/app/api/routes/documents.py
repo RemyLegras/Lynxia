@@ -1,16 +1,52 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from typing import List
 from app.schemas.document import Document, DocumentCuratedData
 from app.auth_utils import get_current_user
 from app.services.document_service import create_document, get_document, get_user_documents, update_document
+import os
+import uuid
+from pathlib import Path
 
 router = APIRouter()
+UPLOAD_DIR = Path("uploads/raw")
 
 def check_access(doc_id: str, user_email: str):
     doc = get_document(doc_id)
     if not doc or doc["owner_user_id"] != user_email:
         raise HTTPException(status_code=404, detail="Document non trouvé")
     return doc
+
+@router.post("/upload")
+async def upload_doc(
+    file: UploadFile = File(...),
+    document_type: str = Form("unknown"),
+    current_user: dict = Depends(get_current_user),
+):
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    file_ext = Path(file.filename).suffix
+    saved_name = f"{uuid.uuid4().hex}{file_ext}"
+    saved_path = UPLOAD_DIR / saved_name
+
+    with saved_path.open("wb") as f:
+        f.write(await file.read())
+
+    created = create_document(
+        {
+            "document_type": document_type,
+            "curated_data": {},
+            "status": "uploaded",
+            "raw_path": str(saved_path),
+            "clean_text_ref": None,
+            "inconsistencies": [],
+        },
+        current_user["email"],
+    )
+
+    return {
+        "message": "Fichier uploadé",
+        "document": created,
+    }
 
 @router.post("/", response_model=Document)
 def create_doc(document: Document, current_user: dict = Depends(get_current_user)):
@@ -28,9 +64,27 @@ def list_docs(limit: int = 50, offset: int = 0, current_user: dict = Depends(get
     docs = get_user_documents(current_user["email"])
     return [Document(**doc) for doc in docs[offset:offset + limit]]
 
+@router.get("/my-uploads", response_model=List[Document])
+def list_my_uploaded_docs(limit: int = 50, offset: int = 0, current_user: dict = Depends(get_current_user)):
+    docs = get_user_documents(current_user["email"], status="uploaded")
+    return [Document(**doc) for doc in docs[offset:offset + limit]]
+
 @router.get("/{document_id}", response_model=Document)
 def get_doc(document_id: str, current_user: dict = Depends(get_current_user)):
     return Document(**check_access(document_id, current_user["email"]))
+
+@router.get("/{document_id}/download")
+def download_doc(document_id: str, current_user: dict = Depends(get_current_user)):
+    doc = check_access(document_id, current_user["email"])
+    raw_path = doc.get("raw_path")
+
+    if not raw_path:
+        raise HTTPException(status_code=404, detail="Aucun fichier brut associé")
+
+    if not os.path.exists(raw_path):
+        raise HTTPException(status_code=404, detail="Fichier introuvable")
+
+    return FileResponse(raw_path, filename=Path(raw_path).name)
 
 @router.post("/{document_id}/curated-data")
 def update_curated(document_id: str, curated_data: DocumentCuratedData, current_user: dict = Depends(get_current_user)):

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, EmailStr
 from app.services.auth_service import authenticate_user, create_token
+from app.services.user_service import to_public_user
 
 router = APIRouter()
 
@@ -24,7 +25,5 @@ def login(user: UserLogin):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": {
-            "email": user.email
-        }
+        "user": to_public_user(user_data, fallback_email=user.email)
     }

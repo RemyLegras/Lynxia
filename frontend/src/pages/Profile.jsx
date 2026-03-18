@@ -1,11 +1,77 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import { authApi } from '../services/api';
 
 export default function Profile() {
+    const navigate = useNavigate();
     const emailOnly = localStorage.getItem("user") || "Utilisateur";
     const [userEmail, setUserEmail] = useState(emailOnly);
     const [firstName, setFirstName] = useState(emailOnly.split('@')[0] || "");
     const [lastName, setLastName] = useState("");
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [message, setMessage] = useState("");
+    const [messageType, setMessageType] = useState("info");
+
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                const response = await authApi.me();
+                const user = response?.data?.user || {};
+                const email = user.email || emailOnly;
+                setUserEmail(email);
+                setFirstName(user.first_name || email.split('@')[0] || "");
+                setLastName(user.last_name || "");
+                localStorage.setItem("user", email);
+            } catch (error) {
+                if (error?.response?.status === 401) {
+                    localStorage.removeItem("token");
+                    navigate('/login');
+                    return;
+                }
+                setMessageType("error");
+                setMessage("Impossible de charger votre profil.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadProfile();
+    }, [emailOnly, navigate]);
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        setMessage("");
+        setMessageType("info");
+        try {
+            const response = await authApi.updateMe({
+                first_name: firstName || null,
+                last_name: lastName || null,
+            });
+
+            const user = response?.data?.user || {};
+            if (user.email) {
+                setUserEmail(user.email);
+                localStorage.setItem("user", user.email);
+            }
+            setFirstName(user.first_name || "");
+            setLastName(user.last_name || "");
+            setMessageType("success");
+            setMessage("Profil mis à jour avec succès.");
+        } catch (error) {
+            if (error?.response?.status === 401) {
+                localStorage.removeItem("token");
+                navigate('/login');
+                return;
+            }
+            const apiMessage = error?.response?.data?.detail;
+            setMessageType("error");
+            setMessage(apiMessage || "Échec de la mise à jour du profil.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return (
         <Layout title="Mon Profil">
@@ -40,6 +106,7 @@ export default function Profile() {
                                         type="text"
                                         value={firstName}
                                         onChange={(e) => setFirstName(e.target.value)}
+                                        disabled={isLoading || isSaving}
                                         className="w-full rounded-lg border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white py-2.5 px-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                     />
                                 </div>
@@ -49,6 +116,7 @@ export default function Profile() {
                                         type="text"
                                         value={lastName}
                                         onChange={(e) => setLastName(e.target.value)}
+                                        disabled={isLoading || isSaving}
                                         className="w-full rounded-lg border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white py-2.5 px-3 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                                     />
                                 </div>
@@ -62,8 +130,27 @@ export default function Profile() {
                                     />
                                 </div>
                             </div>
+                            {message && (
+                                <p
+                                    className={`text-sm rounded-lg px-3 py-2 ${
+                                        messageType === 'success'
+                                            ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                                            : messageType === 'error'
+                                            ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                                            : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                                    }`}
+                                >
+                                    {message}
+                                </p>
+                            )}
                             <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                                <button className="px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95">Enregistrer les modifications</button>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={isLoading || isSaving}
+                                    className="px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                    {isSaving ? 'Enregistrement...' : 'Enregistrer les modifications'}
+                                </button>
                             </div>
                         </div>
 
