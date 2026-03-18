@@ -4,3 +4,4 @@ pydantic[email]
 python-multipart
 pymysql
 cryptography
+minio

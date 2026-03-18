@@ -30,6 +30,14 @@ export const documentsApi = {
   get: (id) => api.get(`/documents/${id}`),
   create: (document) => api.post("/documents/", document),
   updateCuratedData: (id, curatedData) => api.post(`/documents/${id}/curated-data`, curatedData),
+  upload: (file, type = "unknown") => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("document_type", type);
+    return api.post("/documents/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+  },
 };
 
 export default api;

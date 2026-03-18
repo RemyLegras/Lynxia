@@ -946,6 +946,10 @@ body {
   margin-bottom: 0.25rem;
 }
 
+.mt-4 {
+  margin-top: 1rem;
+}
+
 .block {
   display: block;
 }
@@ -1622,6 +1626,11 @@ body {
   background-color: rgb(248 250 252 / 0.5);
 }
 
+.bg-red-50 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(254 242 242 / var(--tw-bg-opacity, 1));
+}
+
 .bg-\[url\(\'https\:\/\/images\.unsplash\.com\/photo-1639322537228-f710d846310a\?auto\=format\&fit\=crop\&q\=80\&w\=1000\'\)\] {
   background-image: url('https://images.unsplash.com/photo-1639322537228-f710d846310a?auto=format&fit=crop&q=80&w=1000');
 }
@@ -2101,6 +2110,11 @@ body {
   color: rgb(248 113 113 / var(--tw-text-opacity, 1));
 }
 
+.text-slate-700 {
+  --tw-text-opacity: 1;
+  color: rgb(51 65 85 / var(--tw-text-opacity, 1));
+}
+
 .opacity-10 {
   opacity: 0.1;
 }
@@ -2119,6 +2133,10 @@ body {
 
 .opacity-20 {
   opacity: 0.2;
+}
+
+.opacity-50 {
+  opacity: 0.5;
 }
 
 .mix-blend-overlay {
@@ -2500,6 +2518,16 @@ body {
   border-color: rgb(127 29 29 / 0.3);
 }
 
+.dark\:border-green-800:is(.dark *) {
+  --tw-border-opacity: 1;
+  border-color: rgb(22 101 52 / var(--tw-border-opacity, 1));
+}
+
+.dark\:border-red-800:is(.dark *) {
+  --tw-border-opacity: 1;
+  border-color: rgb(153 27 27 / var(--tw-border-opacity, 1));
+}
+
 .dark\:bg-background-dark:is(.dark *) {
   --tw-bg-opacity: 1;
   background-color: rgb(16 22 34 / var(--tw-bg-opacity, 1));
@@ -2577,6 +2605,10 @@ body {
   background-color: rgb(30 41 59 / 0.8);
 }
 
+.dark\:bg-red-900\/20:is(.dark *) {
+  background-color: rgb(127 29 29 / 0.2);
+}
+
 .dark\:to-slate-800:is(.dark *) {
   --tw-gradient-to: #1e293b var(--tw-gradient-to-position);
 }
@@ -2634,6 +2666,16 @@ body {
 .dark\:text-slate-500:is(.dark *) {
   --tw-text-opacity: 1;
   color: rgb(100 116 139 / var(--tw-text-opacity, 1));
+}
+
+.dark\:text-green-300:is(.dark *) {
+  --tw-text-opacity: 1;
+  color: rgb(134 239 172 / var(--tw-text-opacity, 1));
+}
+
+.dark\:text-red-300:is(.dark *) {
+  --tw-text-opacity: 1;
+  color: rgb(252 165 165 / var(--tw-text-opacity, 1));
 }
 
 .dark\:ring-slate-900:is(.dark *) {

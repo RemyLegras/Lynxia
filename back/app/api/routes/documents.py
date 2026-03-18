@@ -4,6 +4,7 @@ from typing import List
 from app.schemas.document import Document, DocumentCuratedData
 from app.auth_utils import get_current_user
 from app.services.document_service import create_document, get_document, get_user_documents, update_document
+from app.services.minio_service import upload_file_to_minio, download_file_from_minio
 import os
 import uuid
 from pathlib import Path
@@ -31,12 +32,16 @@ async def upload_doc(
     with saved_path.open("wb") as f:
         f.write(await file.read())
 
+    upload_success = upload_file_to_minio(saved_name, str(saved_path))
+    if upload_success:
+        os.remove(str(saved_path)) # clean up local
+
     created = create_document(
         {
             "document_type": document_type,
             "curated_data": {},
             "status": "uploaded",
-            "raw_path": str(saved_path),
+            "raw_path": saved_name if upload_success else str(saved_path),
             "clean_text_ref": None,
             "inconsistencies": [],
         },
@@ -81,10 +86,15 @@ def download_doc(document_id: str, current_user: dict = Depends(get_current_user
     if not raw_path:
         raise HTTPException(status_code=404, detail="Aucun fichier brut associé")
 
-    if not os.path.exists(raw_path):
-        raise HTTPException(status_code=404, detail="Fichier introuvable")
+    dest_path = f"/tmp/{Path(raw_path).name}"
+    
+    if download_file_from_minio(raw_path, dest_path):
+        return FileResponse(dest_path, filename=Path(raw_path).name)
 
-    return FileResponse(raw_path, filename=Path(raw_path).name)
+    if os.path.exists(raw_path):
+        return FileResponse(raw_path, filename=Path(raw_path).name)
+
+    raise HTTPException(status_code=404, detail="Fichier introuvable")
 
 @router.post("/{document_id}/curated-data")
 def update_curated(document_id: str, curated_data: DocumentCuratedData, current_user: dict = Depends(get_current_user)):
