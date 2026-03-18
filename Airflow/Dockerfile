@@ -6,6 +6,11 @@ USER root
 RUN apt-get update && apt-get install -y \
     build-essential \
     python3-dev \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -17,5 +22,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Create output directory
 RUN mkdir -p /opt/airflow/output_pdf
 
+ENV PYTHONPATH="/opt/airflow/scripts:${PYTHONPATH}"
 # Copy scripts
 COPY scripts/ /opt/airflow/scripts/

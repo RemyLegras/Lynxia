@@ -6,3 +6,4 @@ torch
 torchvision
 python-doctr
 numpy
+opencv-python
