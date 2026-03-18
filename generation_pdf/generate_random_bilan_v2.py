@@ -1161,8 +1161,8 @@ def degrade_pdf_to_scanned(pdf_path: str):
 # GÉNÉRATION PRINCIPALE
 # ============================================================
 
-def generate_random_bilan_v2(output_dir="output_pdf"):
-    os.makedirs(output_dir, exist_ok=True)
+def generate_random_bilan_v2(OUTPUT_DIR_JSON="output_pdf"):
+    os.makedirs(OUTPUT_DIR_JSON, exist_ok=True)
 
     theme = random_theme()
     company = generate_company()
@@ -1171,7 +1171,7 @@ def generate_random_bilan_v2(output_dir="output_pdf"):
     styles = build_styles(theme)
 
     filename = safe_filename(company["name"])
-    output_path = os.path.join(output_dir, filename)
+    output_path = os.path.join(OUTPUT_DIR_JSON, filename)
 
     left, right, top, bottom = theme.margins_mm
     doc = SimpleDocTemplate(
