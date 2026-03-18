@@ -1,6 +1,6 @@
 import re
 from .base import DocumentProcessor
-from utils.cleaner import AmountCleaner
+from ..utils.cleaner import AmountCleaner
 
 class DevisProcessor(DocumentProcessor):
     def __init__(self):

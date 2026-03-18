@@ -5,11 +5,11 @@ import re
 from doctr.models import ocr_predictor 
 from doctr.io import DocumentFile
 
-from processors.bilan import BilanProcessor
-from processors.facture import FactureProcessor
-from processors.devis import DevisProcessor
-from processors.attestation import AttestationProcessor
-
+from .processors.bilan import BilanProcessor
+from .processors.facture import FactureProcessor
+from .processors.devis import DevisProcessor
+from .processors.attestation import AttestationProcessor
+from .utils.cleaner import AmountCleaner
 
 DEVICE = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cpu")
 
