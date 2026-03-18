@@ -1,6 +1,6 @@
 import re
 from .base import DocumentProcessor
-from utils.cleaner import AmountCleaner
+from ..utils.cleaner import AmountCleaner
 
 class BilanProcessor(DocumentProcessor):
     def can_handle(self, text_up: str) -> bool:
