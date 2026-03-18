@@ -7,7 +7,7 @@ from airflow.operators.python import PythonOperator
 # Add the scripts directory to the path so we can import the generation function
 sys.path.append(os.path.join(os.environ['AIRFLOW_HOME'], 'scripts'))
 
-from generate_random_devis_v1 import generate_random_devis 
+from generate_random_devis_v1 import generate_random_devis
 
 default_args = {
     'owner': 'airflow',
