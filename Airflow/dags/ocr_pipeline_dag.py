@@ -11,9 +11,9 @@ sys.path.append(os.path.join(os.environ["AIRFLOW_HOME"], "scripts"))
 
 from ocr.analyzer import OCRAnalyzer
 
-INPUT_DIR = "/opt/airflow/input_pdf"
+INPUT_DIR_PDF = "/opt/airflow/output_pdf"
 WORK_DIR = "/opt/airflow/work_pdf"
-OUTPUT_DIR = "/opt/airflow/output_json"
+OUTPUT_DIR_JSON = "/opt/airflow/output_json"
 
 default_args = {
     "owner": "airflow",
@@ -28,14 +28,14 @@ default_args = {
 def upload_task(**context):
     os.makedirs(WORK_DIR, exist_ok=True)
     files = [
-        f for f in os.listdir(INPUT_DIR)
+        f for f in os.listdir(INPUT_DIR_PDF)
         if f.lower().endswith((".pdf", ".png", ".jpg", ".jpeg"))
     ]
     if not files:
-        raise FileNotFoundError(f"Aucun fichier trouvé dans {INPUT_DIR}")
+        raise FileNotFoundError(f"Aucun fichier trouvé dans {INPUT_DIR_PDF}")
 
     latest = max(
-        [os.path.join(INPUT_DIR, f) for f in files],
+        [os.path.join(INPUT_DIR_PDF, f) for f in files],
         key=os.path.getmtime
     )
     dest = os.path.join(WORK_DIR, os.path.basename(latest))
@@ -86,13 +86,13 @@ def validation_task(**context):
     context["ti"].xcom_push(key="validated_data", value=extracted)
 
 def save_task(**context):
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    os.makedirs(OUTPUT_DIR_JSON, exist_ok=True)
 
     validated = context["ti"].xcom_pull(task_ids="validation_task", key="validated_data")
     file_name = context["ti"].xcom_pull(task_ids="upload_task", key="file_name")
 
     output_name = os.path.splitext(file_name)[0] + ".json"
-    output_path = os.path.join(OUTPUT_DIR, output_name)
+    output_path = os.path.join(OUTPUT_DIR_JSON, output_name)
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(validated, f, ensure_ascii=False, indent=2)

@@ -824,8 +824,8 @@ def draw_page_decorations(canvas_obj, doc, theme: VisualTheme, company: dict):
 # GÉNÉRATION PRINCIPALE
 # ============================================================
 
-def generate_random_devis(output_dir="output_test_devis"):
-    os.makedirs(output_dir, exist_ok=True)
+def generate_random_devis(OUTPUT_DIR_JSON="output_test_devis"):
+    os.makedirs(OUTPUT_DIR_JSON, exist_ok=True)
 
     theme = random_theme()
     profile = generate_document_profile()
@@ -837,7 +837,7 @@ def generate_random_devis(output_dir="output_test_devis"):
     styles = build_styles(theme)
 
     filename = safe_filename(company["name"])
-    output_path = os.path.join(output_dir, filename)
+    output_path = os.path.join(OUTPUT_DIR_JSON, filename)
 
     left, right, top, bottom = theme.margins_mm
 

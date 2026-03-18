@@ -2,19 +2,19 @@ import os
 import json
 from analyzer import OCRAnalyzer
 
-INPUT_DIR = "files/"  
+INPUT_DIR_PDF = "files/"  
 OUTPUT_JSON = "resultat_analyse_myleasy.json"
 
 def main():
-    if not os.path.exists(INPUT_DIR):
-        os.makedirs(INPUT_DIR)
-        print(f" Dossier '{INPUT_DIR}' créé.")
+    if not os.path.exists(INPUT_DIR_PDF):
+        os.makedirs(INPUT_DIR_PDF)
+        print(f" Dossier '{INPUT_DIR_PDF}' créé.")
         return
 
     analyzer = OCRAnalyzer()
     
     supported_ext = ('.pdf', '.png', '.jpg', '.jpeg')
-    files = [f for f in os.listdir(INPUT_DIR) if f.lower().endswith(supported_ext)]
+    files = [f for f in os.listdir(INPUT_DIR_PDF) if f.lower().endswith(supported_ext)]
     
     if not files:
         print(" Aucun fichier à analyser.")
@@ -24,7 +24,7 @@ def main():
     print(f"🚀 Analyse de {len(files)} documents (Mode Conservation Activé)...")
 
     for idx, filename in enumerate(files):
-        filepath = os.path.join(INPUT_DIR, filename)
+        filepath = os.path.join(INPUT_DIR_PDF, filename)
         element_id = idx + 1
         
         try:
@@ -41,7 +41,7 @@ def main():
         except Exception as e:
             print(f" Erreur sur {filename} : {str(e)}")
 
-    print(f"\n✨ Terminé ! Tes fichiers sont toujours dans '{INPUT_DIR}'.")
+    print(f"\n✨ Terminé ! Tes fichiers sont toujours dans '{INPUT_DIR_PDF}'.")
     print(f" JSON généré : {OUTPUT_JSON}")
 
 if __name__ == "__main__":
