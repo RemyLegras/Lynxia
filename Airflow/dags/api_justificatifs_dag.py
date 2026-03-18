@@ -27,6 +27,7 @@ with DAG(
     default_args=default_args,
     schedule_interval=timedelta(days=1),
     catchup=False,
+    tags=['API'],
 ) as dag:
 
     generate_task = PythonOperator(
