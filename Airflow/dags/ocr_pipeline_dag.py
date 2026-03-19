@@ -38,6 +38,34 @@ def get_db_connection():
         cursorclass=pymysql.cursors.DictCursor
     )
 
+def update_document_processing_state(raw_filename: str, *, status: str, clean_text_ref: str | None = None, curated_data: dict | None = None, document_type: str | None = None):
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            set_parts = ["status = %s"]
+            values = [status]
+
+            if clean_text_ref is not None:
+                set_parts.append("clean_text_ref = %s")
+                values.append(clean_text_ref)
+
+            if curated_data is not None:
+                set_parts.append("curated_data = %s")
+                values.append(json.dumps(curated_data))
+
+            if document_type is not None:
+                set_parts.append("document_type = %s")
+                values.append(document_type)
+
+            values.append(raw_filename)
+            cursor.execute(
+                f"UPDATE documents SET {', '.join(set_parts)} WHERE raw_path = %s",
+                values,
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
 def fetch_raw_files(**context):
     """
     Task 1: List files in the RAW zone.
@@ -63,6 +91,8 @@ def ocr_and_clean_task(**context):
     hook = S3Hook(aws_conn_id="minio_conn")
     engine = Variable.get("ocr_engine", default_var="tesseract")
     
+    update_document_processing_state(target_file, status="ocr_processing")
+    
     local_path = hook.download_file(target_file, bucket_name="raw", local_path="/tmp")
     analyzer = OCRAnalyzer(engine=engine)
     result = analyzer.analyze(local_path, target_file, element_id=1)
@@ -75,6 +105,8 @@ def ocr_and_clean_task(**context):
     ti.xcom_push(key="ocr_result", value=result)
     ti.xcom_push(key="current_file", value=target_file)
     ti.xcom_push(key="clean_file", value=clean_filename)
+
+    update_document_processing_state(target_file, status="ocr_completed", clean_text_ref=clean_filename)
     
     if os.path.exists(local_path):
         os.remove(local_path)
@@ -91,6 +123,7 @@ def extract_and_curate_task(**context):
     if not ocr_result: return
 
     hook = S3Hook(aws_conn_id="minio_conn")
+    update_document_processing_state(original_file, status="curation_processing", clean_text_ref=clean_file)
     raw_text = hook.read_key(clean_file, bucket_name="clean")
     
     logger.info("Extraction LLM en cours...")
@@ -126,8 +159,8 @@ def finalize_db_task(**context):
                 WHERE raw_path = %s
             """
             cursor.execute(sql, (
-                data["statut"],
-                data["document_type"],
+                data.get("statut") or "processed",
+                data.get("document_type") or "unknown",
                 json.dumps(data),
                 filename
             ))

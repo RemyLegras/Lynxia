@@ -3,6 +3,7 @@ from fastapi.responses import FileResponse
 from typing import List
 from app.schemas.document import Document, DocumentCuratedData
 from app.auth_utils import get_current_user
+
 from app.services.document_service import create_document, get_document, get_user_documents, update_document
 from app.services.minio_service import upload_file_to_minio, download_file_from_minio
 import os
@@ -16,9 +17,14 @@ UPLOAD_DIR = Path("uploads/raw")
 GOLD_DIR = Path("data/gold")
 
 
+class DocumentStatusUpdate(DocumentCuratedData.__base__):
+    status: str
+
+
 def check_access(doc_id: str, user_email: str):
     doc = get_document(doc_id)
     if not doc or doc["owner_user_id"] != user_email:
+
         raise HTTPException(status_code=404, detail="Document non trouvé")
     return doc
 
@@ -108,6 +114,14 @@ def update_curated(document_id: str, curated_data: DocumentCuratedData, current_
         "status": "processed"
     })
     return {"message": "Données mises à jour", "document": Document(**get_document(document_id))}
+
+@router.patch("/{document_id}/status", response_model=Document)
+def update_doc_status(document_id: str, payload: DocumentStatusUpdate, current_user: dict = Depends(get_current_user)):
+    check_access(document_id, current_user["email"])
+    update_document(document_id, {
+        "status": payload.status,
+    })
+    return Document(**get_document(document_id))
 
 @router.get("/gold/all")
 def get_gold_documents():

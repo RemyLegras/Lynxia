@@ -21,6 +21,7 @@ export const authApi = {
   login: (email, password) => api.post("/auth/login", { email, password }),
   register: (email, password) => api.post("/auth/register", { email, password }),
   me: () => api.get("/auth/me"),
+  stats: () => api.get("/auth/stats"),
   updateMe: (payload) => api.patch("/auth/me", payload),
 };
 
@@ -30,6 +31,7 @@ export const documentsApi = {
   get: (id) => api.get(`/documents/${id}`),
   create: (document) => api.post("/documents/", document),
   updateCuratedData: (id, curatedData) => api.post(`/documents/${id}/curated-data`, curatedData),
+  updateStatus: (id, status) => api.patch(`/documents/${id}/status`, { status }),
   upload: (file, type = "unknown") => {
     const formData = new FormData();
     formData.append("file", file);
