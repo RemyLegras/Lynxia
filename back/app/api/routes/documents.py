@@ -7,10 +7,14 @@ from app.services.document_service import create_document, get_document, get_use
 from app.services.minio_service import upload_file_to_minio, download_file_from_minio
 import os
 import uuid
+import json
+import glob
 from pathlib import Path
 
 router = APIRouter()
 UPLOAD_DIR = Path("uploads/raw")
+GOLD_DIR = Path("data/gold")
+
 
 def check_access(doc_id: str, user_email: str):
     doc = get_document(doc_id)
@@ -104,3 +108,37 @@ def update_curated(document_id: str, curated_data: DocumentCuratedData, current_
         "status": "processed"
     })
     return {"message": "Données mises à jour", "document": Document(**get_document(document_id))}
+
+@router.get("/gold/all")
+def get_gold_documents():
+    """Endpoint public pour le front-end Comptable (lecture de la zone Gold)"""
+    docs = []
+    
+    if not GOLD_DIR.exists():
+        return docs
+        
+    for file_path in glob.glob(f"{GOLD_DIR}/*.json"):
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                
+                # Formatage pour matcher l'attendu du front-end
+                docs.append({
+                    "id": Path(file_path).stem,
+                    "type": data.get("document_type", "Inconnu").capitalize(),
+                    "status": "Validé (Cross-Check OK)" if data.get("is_valid") else "Incohérent",
+                    "curated_data": {
+                        "siret": data.get("siret", ""),
+                        "montant_ht": data.get("montant_ht", 0),
+                        "montant_tva": data.get("montant_tva", 0),
+                        "montant_ttc": data.get("montant_ttc", 0),
+                        "date": data.get("date_validation", ""),
+                        "fournisseur": data.get("company_name", "Inconnu")
+                    }
+                })
+        except Exception as e:
+            continue
+            
+    # Trier par date de modification (les plus récents en premier)
+    docs.sort(key=lambda x: os.path.getmtime(os.path.join(GOLD_DIR, f"{x['id']}.json")), reverse=True)
+    return docs[:20]

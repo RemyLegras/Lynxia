@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y \
     libsm6 \
     libxext6 \
     libxrender1 \
+    poppler-utils \
+    tesseract-ocr \
+    tesseract-ocr-fra \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -19,8 +22,8 @@ USER airflow
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create output directory
-RUN mkdir -p /opt/airflow/output_pdf
+# Create datalake directories
+RUN mkdir -p /opt/airflow/data/bronze /opt/airflow/data/silver /opt/airflow/data/gold
 
 ENV PYTHONPATH="/opt/airflow/scripts:${PYTHONPATH}"
 # Copy scripts

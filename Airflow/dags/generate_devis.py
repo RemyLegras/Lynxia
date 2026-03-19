@@ -20,7 +20,7 @@ default_args = {
 }
 
 def run_generate_devis():
-    OUTPUT_DIR_JSON = "/opt/airflow/output_pdf"
+    OUTPUT_DIR_JSON = "/opt/airflow/data/bronze"
     output_path = generate_random_devis(OUTPUT_DIR_JSON=OUTPUT_DIR_JSON)
     print(f"Devis généré avec succès à l'emplacement : {output_path}")
 

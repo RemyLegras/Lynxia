@@ -1,15 +1,36 @@
+version: '3.8'
+
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: lynxia-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./back/db:/docker-entrypoint-initdb.d
+      - mysql_data:/var/lib/mysql
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
   api:
     build: ./back
-    ports:
-      - "8000:8000"
-    volumes:
-      # Uniquement pour le développement (JSON)
-      - data:/app/data
+    container_name: lynxia-api
+    depends_on:
+      mysql:
+        condition: service_healthy
     environment:
-      - PYTHONUNBUFFERED=1
-      - ENV=${ENV}
-      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_HOST=mysql
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
@@ -25,18 +46,29 @@ services:
   mysql:
     image: mysql:8.0
     ports:
-      - "3306:3306"
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - "8000:8000"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  frontend-compta:
+    build: ./frontend-compta
+    container_name: lynxia-front-compta
+    ports:
+      - "3001:3000"
     volumes:
-      - mysql_data:/var/lib/mysql
-    restart: unless-stopped
+      - ./frontend-compta:/app:cached
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   frontend:
     build: ./frontend
+    container_name: lynxia-front-op
     ports:
-      - "5173:5173"
+      - "3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -59,22 +91,32 @@ services:
     depends_on:
       - mysql
     restart: unless-stopped
+      - ./frontend:/app:cached
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   airflow:
     build: ./Airflow
     container_name: lynxia-airflow
-    ports:
-      - "8081:8080"
+    depends_on:
+      - mysql
     volumes:
       - ./Airflow/dags:/opt/airflow/dags
       - ./Airflow/scripts:/opt/airflow/scripts
-      - ./Airflow/output_pdf:/opt/airflow/output_pdf
+      - ./data:/opt/airflow/data
     environment:
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
-      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+      - API_TOKEN=${API_TOKEN}
+    ports:
+      - "8081:8080"
     command: standalone
-    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
 
   minio:
     image: minio/minio:latest
@@ -91,6 +133,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  data:
   mysql_data:
   minio_data:

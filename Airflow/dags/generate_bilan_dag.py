@@ -20,7 +20,7 @@ default_args = {
 }
 
 def run_generate_bilan():
-    OUTPUT_DIR_JSON = "/opt/airflow/output_pdf"
+    OUTPUT_DIR_JSON = "/opt/airflow/data/bronze"
     output_path = generate_random_bilan_v2(OUTPUT_DIR_JSON=OUTPUT_DIR_JSON)
     print(f"Bilan généré avec succès à l'emplacement : {output_path}")
 

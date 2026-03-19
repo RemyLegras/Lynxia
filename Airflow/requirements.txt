@@ -2,8 +2,12 @@ faker
 reportlab
 Pillow
 pymupdf
-torch
-torchvision
-python-doctr
-numpy
+numpy<2.0.0
 opencv-python
+pdf2image
+mysql-connector-python
+openai
+loguru
+requests
+pytesseract
+scikit-learn
