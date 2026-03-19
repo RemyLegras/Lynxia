@@ -7,6 +7,7 @@ from airflow.operators.python import PythonOperator
 # Add the scripts directory to the path so we can import the generation function
 sys.path.append(os.path.join(os.environ['AIRFLOW_HOME'], 'scripts'))
 
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from generate_random_bilan_v2 import generate_random_bilan_v2
 
 default_args = {
@@ -20,9 +21,21 @@ default_args = {
 }
 
 def run_generate_bilan():
-    OUTPUT_DIR_JSON = "/opt/airflow/data/bronze"
-    output_path = generate_random_bilan_v2(OUTPUT_DIR_JSON=OUTPUT_DIR_JSON)
-    print(f"Bilan généré avec succès à l'emplacement : {output_path}")
+    OUTPUT_DIR = "/tmp"
+    output_path = generate_random_bilan_v2(OUTPUT_DIR_JSON=OUTPUT_DIR)
+    
+    # Upload to MinIO
+    if output_path and os.path.exists(output_path):
+        hook = S3Hook(aws_conn_id="minio_conn")
+        filename = os.path.basename(output_path)
+        hook.load_file(
+            filename=output_path,
+            key=filename,
+            bucket_name="raw",
+            replace=True
+        )
+        print(f"Bilan {filename} uploadé vers MinIO 'raw'")
+        os.remove(output_path)
 
 with DAG(
     'generate_random_bilan',

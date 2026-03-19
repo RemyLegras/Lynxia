@@ -9,6 +9,9 @@ sys.path.append(os.path.join(os.environ['AIRFLOW_HOME'], 'scripts'))
 
 from api_justificatifs import fetch_Api_justificatifs
 
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+from api_justificatifs import fetch_Api_justificatifs
+
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
@@ -18,9 +21,22 @@ default_args = {
 }
 
 def run_fetch():
-    output_dir = "/opt/airflow/data/bronze"
+    output_dir = "/tmp"
     paths = fetch_Api_justificatifs(output_dir=output_dir)
-    print(f"{len(paths)} fichiers téléchargés")
+    
+    if paths:
+        hook = S3Hook(aws_conn_id="minio_conn")
+        for p in paths:
+            if os.path.exists(p):
+                filename = os.path.basename(p)
+                hook.load_file(
+                    filename=p,
+                    key=filename,
+                    bucket_name="raw",
+                    replace=True
+                )
+                print(f"Justificatif {filename} uploadé vers MinIO 'raw'")
+                os.remove(p)
 
 with DAG(
     'fetch_Api_justificatifs',

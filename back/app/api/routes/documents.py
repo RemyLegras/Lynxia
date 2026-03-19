@@ -36,7 +36,7 @@ async def upload_doc(
     with saved_path.open("wb") as f:
         f.write(await file.read())
 
-    upload_success = upload_file_to_minio(saved_name, str(saved_path))
+    upload_success = upload_file_to_minio(saved_name, str(saved_path), bucket_name="raw")
     if upload_success:
         os.remove(str(saved_path)) # clean up local
 

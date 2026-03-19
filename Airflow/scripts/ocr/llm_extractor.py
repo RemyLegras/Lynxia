@@ -4,7 +4,7 @@ from openai import OpenAI
 from loguru import logger
 
 # Configuration Ollama via l'URL envoyée par l'utlisateur
-OLLAMA_BASE_URL = os.getenv("LLM_BASE_URL", "http://100.88.104.2:11434/v1")
+OLLAMA_BASE_URL = os.getenv("LLM_BASE_URL", "http://localhost:11434/v1")
 # Ollama ignore la clé, mais openai SDK en réclame une par défaut
 OLLAMA_API_KEY = os.getenv("LLM_API_KEY", "ollama")
 OLLAMA_MODEL = os.getenv("LLM_MODEL", "llama3") # Le modèle doit être pullé sur le serveur Ollama.

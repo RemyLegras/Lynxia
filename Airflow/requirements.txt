@@ -10,4 +10,8 @@ openai
 loguru
 requests
 pytesseract
-scikit-learn
+scikit-learn
+python-doctr[torch]
+pymysql
+apache-airflow-providers-amazon
+boto3
