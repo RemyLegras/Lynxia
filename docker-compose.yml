@@ -27,6 +27,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      minio:
+        condition: service_started
     environment:
       - MYSQL_HOST=mysql
       - MYSQL_USER=${MYSQL_USER}
@@ -96,6 +98,7 @@ services:
     container_name: lynxia-airflow
     depends_on:
       - mysql
+      - minio
     volumes:
       - ./Airflow/dags:/opt/airflow/dags
       - ./Airflow/scripts:/opt/airflow/scripts
