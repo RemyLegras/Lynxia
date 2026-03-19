@@ -40,7 +40,7 @@ Orchestration des pipelines :
 - **llm_extractor.py** : Extraction d'informations avec LLM
 - **main.py** : Orchestration du pipeline
 - **processors/** : Processeurs spécialisés (facture, devis, attestation, bilan)
-- **utils/** : Utilitaires (nettoyage, détection, API SIRENE)
+- **utils/** : Utilitaires (nettoyage, détection)
 
 ### Scripts (`/scripts`)
 
