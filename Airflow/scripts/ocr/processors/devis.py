@@ -59,13 +59,10 @@ class DevisProcessor(DocumentProcessor):
 
         return {
             "document_type": "devis",
-            "montant_ht": round(max(0.0, m_ht), 2),
-            "montant_tva": round(max(0.0, m_tva_total), 2),
-            "montant_ttc": round(max(0.0, m_ttc), 2),
-            "tva": tva_intra_m.group(0) if tva_intra_m else "N/A",
+            "montant_total": round(max(0.0, m_ttc), 2),
             "date_validation": date_match.group(1) if date_match else "N/A",
             "siret": siret_final,
-            "devise": "USD" if "$" in text_up or "USD" in text_up else "EUR"
+            "devise": "EUR"
         }
 
     def _extract_regex(self, patterns, text):

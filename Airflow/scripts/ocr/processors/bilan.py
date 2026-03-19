@@ -18,43 +18,25 @@ class BilanProcessor(DocumentProcessor):
         keywords_total = ["TOTAL DE L'ACTIF", "TOTAL DU PASSIF", "TOTAL DES PRODUITS", "TOTAL DES CHARGES", "BÉNÉFICE", "RÉSULTAT"]
         
         found_amount = False
-        for page in result.pages:
-            if found_amount: break  
-            
-            for block in page.blocks:
-                for line in block.lines:
-                    words = line.words
-                    if not words: continue
-                    
-                    full_line_text = " ".join([w.value for w in words]).upper()
-                    
-                    if any(k in full_line_text for k in keywords_total):
-                        reconstructed_cols = []
-                        current_col = words[0].value
-                        
-                        for i in range(1, len(words)):
-                            current_word_end = words[i-1].geometry[1][0]
-                            next_word_start = words[i].geometry[0][0]
-                            
-                            if (next_word_start - current_word_end) > 0.02:
-                                reconstructed_cols.append(current_col)
-                                current_col = words[i].value
-                            else:
-                                current_col += " " + words[i].value
-                        reconstructed_cols.append(current_col)
+        # Recherche des mots-clés de totaux dans le texte brut
+        for keyword in keywords_total:
+            # On cherche le mot clé suivi d'un montant sur la même ligne
+            match = re.search(rf"{keyword}.*?(\d[\d\s.,]+)", text_upper)
+            if match:
+                val = AmountCleaner.clean(match.group(1))
+                if val > 2030 or (val > 0 and val < 1900): # Éviter les dates et petits chiffres
+                    selected_amount = val
+                    found_amount = True
+                    break
+        
+        # Fallback : si rien trouvé via mots-clés, on cherche le plus gros montant plausible
+        if not found_amount:
+            all_numbers = re.findall(r'(\d+[\s.,]\d{2})', text_upper)
+            amounts = [AmountCleaner.clean(n) for n in all_numbers]
+            valid_amounts = [a for a in amounts if 1000 < a < 1000000]
+            if valid_amounts:
+                selected_amount = max(valid_amounts)
 
-                        for col in reconstructed_cols:
-                            clean_col = re.sub(r'(?<=\d)\s+(?=\d{3}\b)', '', col)
-                            numbers = re.findall(r'-?\d+[.,]?\d*', clean_col)
-                            
-                            for num in numbers:
-                                val = AmountCleaner.clean(num)
-                                if val > 2030 or (val > 0 and val < 1900):
-                                    selected_amount = val
-                                    found_amount = True
-                                    break
-                            if found_amount: break
-                    if found_amount: break
 
         date_cloture = "N/A"
         date_patterns = [
@@ -74,10 +56,9 @@ class BilanProcessor(DocumentProcessor):
         return {
             "document_type": "bilan",
             "siret": siret,
-            "tva": "N/A",
-            "montant_ht": selected_amount,
-            "montant_tva": 0.0,
-            "montant_ttc": selected_amount,
+            "total_actif": selected_amount,
+            "total_passif": selected_amount,
+            "resultat_net": 0.0, # Pourrait être extrait séparément
             "date_validation": date_cloture,
             "devise": "EUR"
         }

@@ -18,7 +18,7 @@ default_args = {
 }
 
 def run_fetch():
-    output_dir = "/opt/airflow/output_pdf"
+    output_dir = "/opt/airflow/data/bronze"
     paths = fetch_Api_justificatifs(output_dir=output_dir)
     print(f"{len(paths)} fichiers téléchargés")
 

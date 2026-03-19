@@ -88,6 +88,7 @@ def fetch_Api_justificatifs(output_dir="/opt/airflow/output_pdf"):
     next_url = add_api_token_to_url(API_URL, API_TOKEN)
 
     downloaded_files = []
+    seen_urls = set()
 
     while next_url:
         print(f"Appel API : {next_url}")
@@ -104,19 +105,34 @@ def fetch_Api_justificatifs(output_dir="/opt/airflow/output_pdf"):
                 continue
 
             file_url = build_justificatif_url(justificatif_value, API_TOKEN)
+            
+            # Déduplication par URL (évite les doublons dans le même JSON)
+            if file_url in seen_urls:
+                print(f"Saut : URL déjà traitée ({file_url})")
+                continue
+            seen_urls.add(file_url)
+
             filename = get_filename_from_url(file_url, i)
-            output_path = get_unique_path(output_dir, filename)
+            output_path = os.path.join(output_dir, filename)
+
+            # Déduplication par existence de fichier (évite les doublons entre runs)
+            if os.path.exists(output_path):
+                print(f"Saut : Fichier déjà présent ({filename})")
+                continue
 
             print(f"Téléchargement : {file_url}")
-            file_response = session.get(file_url, timeout=120, stream=True)
-            file_response.raise_for_status()
+            try:
+                file_response = session.get(file_url, timeout=120, stream=True)
+                file_response.raise_for_status()
 
-            with open(output_path, "wb") as f:
-                for chunk in file_response.iter_content(8192):
-                    if chunk:
-                        f.write(chunk)
+                with open(output_path, "wb") as f:
+                    for chunk in file_response.iter_content(8192):
+                        if chunk:
+                            f.write(chunk)
+                downloaded_files.append(output_path)
+            except Exception as e:
+                print(f"Erreur téléchargement {file_url} : {e}")
 
-            downloaded_files.append(output_path)
 
         raw_next_url = get_next_url(payload)
         if raw_next_url:
