@@ -45,6 +45,10 @@ Analyse le texte OCR et renvoie un JSON dont la structure dépend du type de doc
   "document_type": "devis",
   "siret": "14 chiffres",
   "montant_total": 0.0,
+  "tva": "FR...",
+  "montant_ht": 0.0,
+  "montant_tva": 0.0,
+  "montant_ttc": 0.0,
   "date_validation": "JJ/MM/AAAA"
 }
 
@@ -52,9 +56,18 @@ Règles impératives :
 - Réponse STRICTEMENT en JSON. Aucun texte avant ou après.
 - Dates en JJ/MM/AAAA.
 
+Met un pourcentage de confiance pour chaque document dans le json sous la clé "confidence". 
+
+
 ### EXEMPLE BILAN ###
 Texte : "BILAN COMPTABLE 2024 SIRET 12345678900012 TOTAL ACTIF 500000 TOTAL PASSIF 500000"
-JSON : {"document_type": "bilan", "siret": "12345678900012", "total_actif": 500000.0, "total_passif": 500000.0, "resultat_net": 0.0, "date_validation": "01/01/2024"}
+JSON : { "confidence": 0.95,
+"document_type": "bilan",
+"siret": "12345678900012",
+"total_actif": 500000.0,
+"total_passif": 500000.0, 
+"resultat_net": 0.0, 
+"date_validation": "01/01/2024"}
 
 ### DOCUMENT A TRAITER ###
 OCR : {ocr_text}

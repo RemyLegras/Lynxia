@@ -70,7 +70,7 @@ export default function Login() {
 
       navigate("/dashboard");
     } catch (err) {
-      const msg = err.response?.data?.detail || "Erreur serveur. Vérifie que ton backend est lancé !";
+      const msg = err.response?.data?.detail || "Erreur serveur";
       setError(msg);
     } finally {
       setLoading(false);
@@ -108,7 +108,7 @@ export default function Login() {
               <rect fill="url(#grid)" height="100" width="100"></rect>
             </svg>
           </div>
-          
+
           <div className="relative z-10">
             <div className="flex items-center gap-3 text-white">
               <div className="w-10 h-10 bg-white rounded-lg overflow-hidden flex items-center justify-center">
@@ -117,7 +117,7 @@ export default function Login() {
               <span className="text-2xl font-bold tracking-tight">LynxIA</span>
             </div>
           </div>
-          
+
           <div className="relative z-10">
             <h1 className="text-4xl font-extrabold text-white leading-tight mb-6">
               Intelligence <br /><span className="text-blue-200">supérieure.</span>
@@ -125,7 +125,7 @@ export default function Login() {
             <p className="text-blue-100 text-lg max-w-md leading-relaxed opacity-90">
               IA avancée pour l'analyse et la sécurité des documents d'entreprise.
             </p>
-            
+
             <div className="mt-12 bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-xl max-w-sm">
               <p className="text-white italic text-sm mb-4">"LynxIA a réduit notre temps de traitement manuel de plus de 80%."</p>
               <div className="flex items-center gap-3">
@@ -137,7 +137,7 @@ export default function Login() {
               </div>
             </div>
           </div>
-          
+
           <div className="relative z-10 text-blue-200 text-[11px] flex justify-between opacity-70">
             <span>© 2024 LynxIA Inc.</span>
             <div className="flex gap-4">
@@ -157,11 +157,11 @@ export default function Login() {
               </div>
               <h2 className="text-slate-900 dark:text-white text-xl font-bold">LynxIA</h2>
             </div>
-            
+
             <div className="text-center lg:text-left mb-6">
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-                {isForgotPassword 
-                  ? "Réinitialiser le mot de passe" 
+                {isForgotPassword
+                  ? "Réinitialiser le mot de passe"
                   : (isSignUp ? "Créer un compte" : "Bon retour parmi nous")}
               </h2>
               {isForgotPassword && !resetSent && (
@@ -182,7 +182,7 @@ export default function Login() {
                     </p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => toggleView('login')}
                   className="w-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-semibold py-3.5 rounded-lg transition-all"
                 >
@@ -192,29 +192,29 @@ export default function Login() {
             ) : (
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <div>
-                  <input 
-                    type="email" 
-                    placeholder="Email" 
-                    required 
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    required
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm border-transparent"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                
+
                 {!isForgotPassword && (
                   <div>
                     <div className="relative">
-                      <input 
+                      <input
                         type={showPassword ? "text" : "password"}
-                        placeholder="Mot de passe" 
-                        required 
+                        placeholder="Mot de passe"
+                        required
                         className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-sm border-transparent"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                       />
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                       >
@@ -225,21 +225,21 @@ export default function Login() {
                     </div>
                   </div>
                 )}
-                
+
                 {!isForgotPassword && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        id="remember" 
+                      <input
+                        type="checkbox"
+                        id="remember"
                         className="w-3.5 h-3.5 rounded text-primary border-slate-300 dark:border-slate-700 dark:bg-slate-800 focus:ring-primary"
                         checked={remember}
                         onChange={(e) => setRemember(e.target.checked)}
                       />
                       <label htmlFor="remember" className="text-xs text-slate-500 dark:text-slate-400 cursor-pointer">Se souvenir de moi</label>
                     </div>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => toggleView('forgot')}
                       className="text-xs font-semibold text-primary hover:underline"
                     >
@@ -247,20 +247,20 @@ export default function Login() {
                     </button>
                   </div>
                 )}
-                
+
                 {error && <p className="text-red-500 text-sm font-bold mt-2">{error}</p>}
 
-                <button 
+                <button
                   type="submit"
                   disabled={loading}
                   className="w-full bg-primary hover:bg-primary/95 text-white font-semibold py-3.5 rounded-lg shadow-lg shadow-primary/10 transition-all transform active:scale-[0.99] mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? "Chargement..." : (isForgotPassword ? "Envoyer le lien" : (isSignUp ? "S'inscrire" : "Se connecter"))}
                 </button>
-                
+
                 {isForgotPassword && (
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => toggleView('login')}
                     className="w-full text-slate-500 dark:text-slate-400 text-xs font-semibold hover:text-slate-700 dark:hover:text-slate-200 transition-colors mt-2"
                   >
@@ -273,15 +273,15 @@ export default function Login() {
             {!isForgotPassword && (
               <p className="mt-8 text-center text-slate-500 dark:text-slate-400 text-sm">
                 {isSignUp ? "Déjà un compte ?" : "Nouveau sur LynxIA ?"}{" "}
-                <span 
-                  onClick={() => toggleView(isSignUp ? 'login' : 'signup')} 
+                <span
+                  onClick={() => toggleView(isSignUp ? 'login' : 'signup')}
                   className="text-primary font-bold hover:underline cursor-pointer"
                 >
                   {isSignUp ? "Se connecter" : "S'inscrire"}
                 </span>
               </p>
             )}
-            
+
             <div className="mt-12 flex items-center justify-center gap-2 text-slate-300 dark:text-slate-600">
               <span className="material-symbols-outlined text-[14px]">lock</span>
               <span className="text-[9px] uppercase tracking-[0.2em] font-bold">Connexion SSL sécurisée</span>

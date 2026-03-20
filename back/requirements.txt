@@ -5,3 +5,5 @@ python-multipart
 pymysql
 cryptography
 minio
+requests
+loguru

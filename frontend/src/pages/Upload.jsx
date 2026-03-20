@@ -30,87 +30,6 @@ function getCuratedDataEntries(curatedData) {
   });
 }
 
-function getProcessingSteps(document) {
-  const status = (document?.status || '').toLowerCase();
-  const hasUploaded = Boolean(document?.element_id);
-  const hasOcr = Boolean(document?.clean_text_ref);
-  const hasCuratedData = getCuratedDataEntries(document?.curated_data).length > 0;
-
-  const uploadDone = hasUploaded;
-  const ocrDone = uploadDone && hasOcr;
-  const curationDone = ocrDone && hasCuratedData;
-  const dbDone = curationDone;
-
-  return [
-    {
-      key: 'uploaded',
-      label: 'Upload du document',
-      done: uploadDone,
-      active: hasUploaded && !ocrDone,
-    },
-    {
-      key: 'ocr',
-      label: 'OCR dans MinIO',
-      done: ocrDone,
-      active: uploadDone && !ocrDone && status === 'ocr_processing',
-    },
-    {
-      key: 'curation',
-      label: 'Extraction et structuration',
-      done: curationDone,
-      active: ocrDone && !curationDone && ['ocr_completed', 'curation_processing'].includes(status),
-    },
-    {
-      key: 'db',
-      label: 'Données disponibles en base',
-      done: dbDone,
-      active: curationDone && !dbDone,
-    },
-  ];
-}
-
-function getStatusMeta(document) {
-  const status = document?.status || 'uploaded';
-  const normalizedStatus = status.toLowerCase();
-  const hasCuratedData = getCuratedDataEntries(document?.curated_data).length > 0;
-
-  if (hasCuratedData) {
-    if (normalizedStatus === 'alerte') {
-      return {
-        label: 'Alerte',
-        tone: 'bg-red-100 text-[#ed3500] dark:bg-red-900/30',
-        description: 'Les champs ci-dessous proviennent de MySQL après traitement.',
-      };
-    }
-
-    if (['approved', 'approuved'].includes(normalizedStatus)) {
-      return {
-        label: 'Approuvé',
-        tone: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-        description: 'Le document a été approuvé et enregistré en base.',
-      };
-    }
-
-    return {
-      label: 'Traité',
-      tone: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-      description: 'Les champs ci-dessous proviennent de MySQL après traitement.',
-    };
-  }
-
-  const statusMap = {
-    uploaded: 'Document reçu, en attente du pipeline OCR.',
-    ocr_processing: 'OCR en cours dans MinIO.',
-    ocr_completed: 'OCR terminé, structuration en cours.',
-    curation_processing: 'Curated data en cours de génération.',
-  };
-
-  return {
-    label: 'En traitement',
-    tone: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-    description: statusMap[normalizedStatus] || 'Traitement en cours.',
-  };
-}
 
 export default function Upload() {
   const [searchParams] = useSearchParams();
@@ -120,10 +39,12 @@ export default function Upload() {
   const [uploadedDoc, setUploadedDoc] = useState(null);
   const [uploadMessage, setUploadMessage] = useState(null);
   const [documentData, setDocumentData] = useState(null);
-  const [pollError, setPollError] = useState(null);
   const [isApproving, setIsApproving] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({});
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+  const displayedDocument = documentData || uploadedDoc;
 
   useEffect(() => {
     if (!selectedDocumentId) {
@@ -142,7 +63,6 @@ export default function Upload() {
         setUploadedDoc(response.data);
         setDocumentData(response.data);
         setUploadMessage(null);
-        setPollError(null);
       } catch (error) {
         if (isCancelled) {
           return;
@@ -159,6 +79,39 @@ export default function Upload() {
       isCancelled = true;
     };
   }, [selectedDocumentId]);
+
+  // Load document preview URL
+  useEffect(() => {
+    if (!displayedDocument?.element_id) {
+      setPreviewUrl(null);
+      return undefined;
+    }
+    
+    let isCancelled = false;
+    
+    const loadPreview = async () => {
+      try {
+        const response = await documentsApi.download(displayedDocument.element_id);
+        if (isCancelled) return;
+        
+        const blob = response.data;
+        const url = URL.createObjectURL(blob);
+        setPreviewUrl(url);
+      } catch (error) {
+        console.error("Erreur téléchargement aperçu:", error);
+      }
+    };
+    
+    loadPreview();
+    
+    return () => {
+      isCancelled = true;
+      setPreviewUrl((currentUrl) => {
+        if (currentUrl) URL.revokeObjectURL(currentUrl);
+        return null;
+      });
+    };
+  }, [displayedDocument?.element_id]);
 
   useEffect(() => {
     if (!uploadedDoc?.element_id) {
@@ -177,7 +130,6 @@ export default function Upload() {
 
         const nextDocument = response.data;
         setDocumentData(nextDocument);
-        setPollError(null);
 
         const hasCuratedData = getCuratedDataEntries(nextDocument?.curated_data).length > 0;
         const stillProcessing = PROCESSING_STATUSES.has(nextDocument?.status);
@@ -191,7 +143,6 @@ export default function Upload() {
         }
 
         console.error(error);
-        setPollError("Impossible de suivre le traitement pour le moment.");
         timeoutId = window.setTimeout(pollDocument, POLLING_INTERVAL_MS);
       }
     };
@@ -211,7 +162,6 @@ export default function Upload() {
     if (!file) return;
     setIsUploading(true);
     setUploadMessage(null);
-    setPollError(null);
     setUploadedDoc(null);
     setDocumentData(null);
     try {
@@ -280,18 +230,17 @@ export default function Upload() {
     }
   };
 
-  const displayedDocument = documentData || uploadedDoc;
-  const curatedData = displayedDocument?.curated_data || {};
+  const curatedDataRaw = displayedDocument?.curated_data;
+  const curatedData = curatedDataRaw || {};
   const editableCuratedData = { ...curatedData, ...formData };
   const curatedEntries = useMemo(() => getCuratedDataEntries(curatedData), [curatedData]);
-  const processingSteps = useMemo(() => getProcessingSteps(displayedDocument), [displayedDocument]);
-  const statusMeta = useMemo(() => getStatusMeta(displayedDocument), [displayedDocument]);
+
   const isProcessed = curatedEntries.length > 0;
   const scoreLabel = displayedDocument?.status?.toLowerCase() === 'approuved' ? 'Approuvé' : editableCuratedData?.statut?.toLowerCase() === 'alerte' ? 'Alerte' : isProcessed ? 'Disponible' : 'En attente';
 
   useEffect(() => {
-    setFormData(curatedData || {});
-  }, [displayedDocument?.element_id, curatedData]);
+    setFormData(curatedDataRaw || {});
+  }, [displayedDocument?.element_id, curatedDataRaw]);
 
   const handleSave = async () => {
     if (!displayedDocument?.element_id) {
@@ -357,54 +306,17 @@ export default function Upload() {
                   </button>
                 </div>
               </div>
-              <div className="p-6 flex-1 flex items-center justify-center bg-slate-100 dark:bg-slate-950/50 min-h-[400px]">
-                <div className="w-full max-w-xl rounded-2xl bg-white dark:bg-slate-800 shadow-xl overflow-hidden border border-slate-300 dark:border-slate-700">
-                  <div className="px-6 py-5 border-b border-primary/10 bg-slate-50 dark:bg-slate-800/80">
-                    <div className="flex items-center justify-between gap-3 mb-2">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900 dark:text-white">Suivi du pipeline</p>
-                        <p className="text-xs text-slate-500">Document ID: {displayedDocument?.element_id || 'en attente'}</p>
-                      </div>
-                      <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${statusMeta.tone}`}>
-                        {statusMeta.label}
-                      </span>
-                    </div>
-                    <p className="text-sm text-slate-500">{statusMeta.description}</p>
+              <div className="p-6 flex-1 flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-950/50 min-h-[400px] relative">
+                {previewUrl ? (
+                  <iframe src={`${previewUrl}#toolbar=0`} className="w-full h-full min-h-[600px] rounded-xl border border-slate-300 dark:border-slate-700 bg-white" title="Aperçu du document" />
+                ) : (
+                  <div className="animate-pulse space-y-4 w-full h-full flex flex-col justify-center items-center opacity-50">
+                     <span className="material-symbols-outlined text-6xl text-slate-300">description</span>
+                     <p className="text-slate-500">Chargement de l'aperçu...</p>
                   </div>
-                  <div className="p-6 space-y-4">
-                    {processingSteps.map((step, index) => {
-                      const stateClass = step.done
-                        ? 'bg-green-500 border-green-500 text-white'
-                        : step.active
-                          ? 'bg-primary border-primary text-white animate-pulse'
-                          : 'bg-white border-slate-300 text-slate-400 dark:bg-slate-900 dark:border-slate-700';
+                )}
+                
 
-                      return (
-                        <div key={step.key} className="flex items-start gap-3">
-                          <div className="flex flex-col items-center">
-                            <div className={`size-8 rounded-full border flex items-center justify-center text-xs font-bold ${stateClass}`}>
-                              {step.done ? '✓' : index + 1}
-                            </div>
-                            {index < processingSteps.length - 1 && (
-                              <div className={`w-px h-8 ${step.done ? 'bg-green-400' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
-                            )}
-                          </div>
-                          <div className="pt-1">
-                            <p className="text-sm font-semibold text-slate-900 dark:text-white">{step.label}</p>
-                            <p className="text-xs text-slate-500">
-                              {step.done ? 'Étape terminée' : step.active ? 'En cours...' : 'En attente'}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {pollError && (
-                      <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800">
-                        {pollError}
-                      </div>
-                    )}
-                  </div>
-                </div>
               </div>
             </div>
             <div className="xl:col-span-5 flex flex-col gap-6">
