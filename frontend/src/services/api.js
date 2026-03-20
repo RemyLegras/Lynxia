@@ -29,6 +29,7 @@ export const authApi = {
 export const documentsApi = {
   list: (limit = 50, offset = 0) => api.get(`/documents/?limit=${limit}&offset=${offset}`),
   get: (id) => api.get(`/documents/${id}`),
+  download: (id) => api.get(`/documents/${id}/download`, { responseType: 'blob' }),
   create: (document) => api.post("/documents/", document),
   updateCuratedData: (id, curatedData) => api.post(`/documents/${id}/curated-data`, curatedData),
   updateStatus: (id, status) => api.patch(`/documents/${id}/status`, { status }),
